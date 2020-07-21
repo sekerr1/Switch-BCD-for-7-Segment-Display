@@ -1,0 +1,35 @@
+# Pin assignment for LEDs
+NET "LED7" LOC = "G1" ; # Bank = 3, Signal name = LD7
+NET "LED6" LOC = "P4" ; # Bank = 2, Signal name = LD6
+NET "LED5" LOC = "N4" ;  # Bank = 2, Signal name = LD5
+NET "LED4" LOC = "N5" ;  # Bank = 2, Signal name = LD4
+NET "LED3" LOC = "P6" ; # Bank = 2, Signal name = LD3
+NET "LED2" LOC = "P7" ; # Bank = 3, Signal name = LD2
+NET "LED1" LOC = "M11" ; # Bank = 2, Signal name = LD1
+NET "LED0" LOC = "M5" ;  # Bank = 2, Signal name = LD0
+
+# Pin assignment for SWs
+NET "SW7" LOC = "N3";  # Bank = 2, Signal name = SW7
+NET "SW6" LOC = "E2";  # Bank = 3, Signal name = SW6
+NET "SW5" LOC = "F3";  # Bank = 3, Signal name = SW5
+NET "SW4" LOC = "G3";  # Bank = 3, Signal name = SW4
+NET "SW3" LOC = "B4";  # Bank = 3, Signal name = SW3
+NET "SW2" LOC = "K3";  # Bank = 3, Signal name = SW2
+NET "SW1" LOC = "L3";  # Bank = 3, Signal name = SW1
+NET "SW0" LOC = "P11";  # Bank = 2, Signal name = SW0
+
+# Connected to Basys2 onBoard 7seg display
+NET "CA" LOC = "L14"; # Bank = 1, Signal name = CA
+NET "CB" LOC = "H12"; # Bank = 1, Signal name = CB
+NET "CC" LOC = "N14"; # Bank = 1, Signal name = CC
+NET "CD" LOC = "N11"; # Bank = 2, Signal name = CD
+NET "CE" LOC = "P12"; # Bank = 2, Signal name = CE
+NET "CF" LOC = "L13"; # Bank = 1, Signal name = CF
+NET "CG" LOC = "M12"; # Bank = 1, Signal name = CG
+
+NET "AN3" LOC = "K14"; # Bank = 1, Signal name = AN3
+NET "AN2" LOC = "M13"; # Bank = 1, Signal name = AN2
+NET "AN1" LOC = "J12"; # Bank = 1, Signal name = AN1
+NET "AN0" LOC = "F12"; # Bank = 1, Signal name = AN0
+
+NET "clk" LOC = "B8"; # Bank = 0, Signal name = MCLK

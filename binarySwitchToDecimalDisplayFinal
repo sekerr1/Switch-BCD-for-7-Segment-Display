@@ -1,0 +1,672 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    10:49:24 07/16/2020 
+-- Design Name: 
+-- Module Name:    tutorial1 - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+USE ieee.numeric_std.all;
+USE ieee.std_logic_unsigned.all;
+--use IEEE.NUMERIC_STD.ALL;
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity tutorial1 is
+    Port ( clk : in  STD_LOGIC;
+			-- Onboard switches
+		   SW0 : in  STD_LOGIC; -- used as rst
+           SW1 : in  STD_LOGIC;
+           SW2 : in  STD_LOGIC;
+           SW3 : in  STD_LOGIC;
+           SW4 : in  STD_LOGIC;
+           SW5 : in  STD_LOGIC;
+           SW6 : in  STD_LOGIC;
+           SW7 : in  STD_LOGIC;
+		   
+			-- Onboard LEDs
+           LED0 : out  STD_LOGIC;
+           LED1 : out  STD_LOGIC;
+           LED2 : out  STD_LOGIC;
+           LED3 : out  STD_LOGIC;
+           LED4 : out  STD_LOGIC;
+           LED5 : out  STD_LOGIC;
+           LED6 : out  STD_LOGIC;
+           LED7 : out  STD_LOGIC;
+			  -- Display Selector
+           AN0 : out  STD_LOGIC;
+           AN1 : out  STD_LOGIC;
+           AN2 : out  STD_LOGIC;
+           AN3 : out  STD_LOGIC;
+		   --ANODES FOR SEGMENT DISPLAY
+		   CA : out  STD_LOGIC;
+		   CB : out  STD_LOGIC;
+		   CC : out  STD_LOGIC;
+		   CD : out  STD_LOGIC;
+		   CE : out  STD_LOGIC;
+		   CF : out  STD_LOGIC;
+		   CG : out  STD_LOGIC;
+		   DP : out  STD_LOGIC
+		   );	  
+end tutorial1;
+	
+architecture Behavioral of tutorial1 is
+
+	-- Counter for display time 2^12 = 4096
+	signal cntr : std_logic_vector(11 downto 0);
+	-- Time interval for each display is 4096/4 = 1024
+	constant C_time_cntr0 : integer := 0;
+	constant C_time_cntr1 : integer := 1023;
+	constant C_time_cntr2 : integer := 2027;
+	constant C_time_cntr3 : integer := 3071;
+	-- Keeps track of counter to trigger selector
+	signal time_track0 : std_logic;
+	signal time_track1 : std_logic;
+	signal time_track2 : std_logic;
+	signal time_track3 : std_logic;
+	-- vector to store switch values
+	signal switch_count : std_logic_vector(7 downto 0);
+	-- signals for the ones, tens and hundreds place of decimal value
+	signal hun	: std_logic_vector(3 downto 0);
+	signal ten	: std_logic_vector(3 downto 0);
+	signal uni	: std_logic_vector(3 downto 0);
+	
+	begin
+		
+		LED0 <= SW0;
+		LED1 <= SW1;
+		LED2 <= SW2;
+		LED3 <= SW3;
+		LED4 <= SW4;
+		LED5 <= SW5;
+		LED6 <= SW6;
+		LED7 <= SW7;
+		-- store switch values
+		switch_count(0) <= SW0;
+		switch_count(1) <= SW1;
+		switch_count(2) <= SW2;
+		switch_count(3) <= SW3;
+		switch_count(4) <= SW4;
+		switch_count(5) <= SW5;
+		switch_count(6) <= SW6;
+		switch_count(7) <= SW7;
+		
+		------------------------------------------------------------------------
+		-- updates and increments counter cntr for display 
+		------------------------------------------------------------------------
+	   sm_sync_proc: process(clk)
+	   begin
+			if(rising_edge(clk)) then
+				cntr <= cntr + 1;		
+			end if;	
+	   end process sm_sync_proc;
+		
+		------------------------------------------------------------------------
+		-- process to convert 8 bit switch_count into a 12 bit decmial value stored in bcd
+		-- updates values of hun ten and one for display
+		------------------------------------------------------------------------
+	   BCD_convert: process(switch_count)
+	   variable temp : std_logic_vector (7 downto 0) ;
+       variable bcd  : std_logic_vector (11 downto 0) ;
+		
+	   begin
+			temp := switch_count ;
+			bcd     := (others => '0') ;
+			
+			for i in 0 to 7 loop
+				if bcd(3 downto 0) > 4 then	
+				   bcd(3 downto 0) := bcd(3 downto 0) + 3;
+				end if;
+		
+				if bcd(7 downto 4) > 4 then 
+					bcd(7 downto 4) := bcd(7 downto 4) + 3;
+				end if;
+    
+				if bcd(11 downto 8) > 4 then  
+					bcd(11 downto 8) := bcd(11 downto 8) + 3;
+				end if;
+		
+				bcd := bcd(10 downto 0) & temp(7);
+				temp := temp(6 downto 0) & '0';
+				
+			end loop;
+			hun <= bcd(11 downto 8);
+			ten <= bcd(7 downto 4);
+			uni <= bcd(3 downto 0);
+			
+		end process BCD_convert;
+		
+		-- Time tracker for display updater
+	   time_track0 <= '1' when cntr = C_time_cntr0 else '0';
+	   time_track1 <= '1' when cntr = C_time_cntr1 else '0';
+	   time_track2 <= '1' when cntr = C_time_cntr2 else '0';
+	   time_track3 <= '1' when cntr = C_time_cntr3 else '0';
+		
+		------------------------------------------------------------------------
+		-- prints values for one ten and hundred on display
+		------------------------------------------------------------------------
+		segment_display_proc: process(time_track0, time_track1, time_track2, time_track3)
+		begin	
+			-- update value for LSD
+			if(time_track0 = '1') then
+				case uni	 is 
+					when "0000" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0001" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0010" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '1';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0011" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0100" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0101" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0110" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0111" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "1000" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "1001" =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when others =>
+						AN0 <= '0';
+						AN1 <= '1';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '1';
+						CC  <= '1';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';	
+				end case;
+				-- update value of middle digit
+				elsif(time_track1 = '1') then
+				case ten is 
+					when "0000" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0001" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0010" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '1';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0011" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0100" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0101" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0110" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0111" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "1000" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "1001" =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when others =>
+						AN0 <= '1';
+						AN1 <= '0';
+						AN2 <= '1';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '1';
+						CC  <= '1';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';	
+					
+				end case;
+				-- update value for MSD
+				elsif(time_track2 = '1') then
+				case hun is 
+					when "0000" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0001" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "0010" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '1';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0011" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0100" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0101" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+					
+					when "0110" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '1';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "0111" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';
+						
+					when "1000" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '0';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when "1001" =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '0';
+						CB  <= '0';
+						CC  <= '0';
+						CD  <= '0';
+						CE  <= '1';
+						CF  <= '0';
+						CG  <= '0';  
+						DP  <= '1';
+						
+					when others =>
+						AN0 <= '1';
+						AN1 <= '1';
+						AN2 <= '0';
+						AN3 <= '1';
+						
+						CA  <= '1';
+						CB  <= '1';
+						CC  <= '1';
+						CD  <= '1';
+						CE  <= '1';
+						CF  <= '1';
+						CG  <= '1';  
+						DP  <= '1';	
+					
+				end case;
+			end if;
+		end process segment_display_proc;
+end Behavioral;
+
