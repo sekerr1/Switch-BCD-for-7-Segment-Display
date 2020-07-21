@@ -1,21 +1,7 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Author: Sean Kerr
 -- 
 -- Create Date:    10:49:24 07/16/2020 
--- Design Name: 
--- Module Name:    tutorial1 - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
---
--- Dependencies: 
---
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -27,17 +13,16 @@ USE ieee.std_logic_unsigned.all;
 
 entity tutorial1 is
     Port ( clk : in  STD_LOGIC;
-			-- Onboard switches
-		   SW0 : in  STD_LOGIC; -- used as rst
+	   -- Onboard switches
+           SW0 : in  STD_LOGIC; -- used as rst
            SW1 : in  STD_LOGIC;
            SW2 : in  STD_LOGIC;
            SW3 : in  STD_LOGIC;
            SW4 : in  STD_LOGIC;
            SW5 : in  STD_LOGIC;
            SW6 : in  STD_LOGIC;
-           SW7 : in  STD_LOGIC;
-		   
-			-- Onboard LEDs
+           SW7 : in  STD_LOGIC;	   
+	  -- Onboard LEDs
            LED0 : out  STD_LOGIC;
            LED1 : out  STD_LOGIC;
            LED2 : out  STD_LOGIC;
@@ -46,20 +31,20 @@ entity tutorial1 is
            LED5 : out  STD_LOGIC;
            LED6 : out  STD_LOGIC;
            LED7 : out  STD_LOGIC;
-			  -- Display Selector
+	  -- Display Selector
            AN0 : out  STD_LOGIC;
            AN1 : out  STD_LOGIC;
            AN2 : out  STD_LOGIC;
            AN3 : out  STD_LOGIC;
-		   --ANODES FOR SEGMENT DISPLAY
-		   CA : out  STD_LOGIC;
-		   CB : out  STD_LOGIC;
-		   CC : out  STD_LOGIC;
-		   CD : out  STD_LOGIC;
-		   CE : out  STD_LOGIC;
-		   CF : out  STD_LOGIC;
-		   CG : out  STD_LOGIC;
-		   DP : out  STD_LOGIC
+	 --ANODES FOR SEGMENT DISPLAY
+	   CA : out  STD_LOGIC;
+	   CB : out  STD_LOGIC;
+	   CC : out  STD_LOGIC;
+	   CD : out  STD_LOGIC;
+	   CE : out  STD_LOGIC;
+	   CF : out  STD_LOGIC;
+	   CG : out  STD_LOGIC;
+	   DP : out  STD_LOGIC
 		   );	  
 end tutorial1;
 	
@@ -67,18 +52,22 @@ architecture Behavioral of tutorial1 is
 
 	-- Counter for display time 2^12 = 4096
 	signal cntr : std_logic_vector(11 downto 0);
+	
 	-- Time interval for each display is 4096/4 = 1024
 	constant C_time_cntr0 : integer := 0;
 	constant C_time_cntr1 : integer := 1023;
 	constant C_time_cntr2 : integer := 2027;
 	constant C_time_cntr3 : integer := 3071;
+	
 	-- Keeps track of counter to trigger selector
 	signal time_track0 : std_logic;
 	signal time_track1 : std_logic;
 	signal time_track2 : std_logic;
 	signal time_track3 : std_logic;
+	
 	-- vector to store switch values
 	signal switch_count : std_logic_vector(7 downto 0);
+	
 	-- signals for the ones, tens and hundreds place of decimal value
 	signal hun	: std_logic_vector(3 downto 0);
 	signal ten	: std_logic_vector(3 downto 0);
@@ -94,6 +83,7 @@ architecture Behavioral of tutorial1 is
 		LED5 <= SW5;
 		LED6 <= SW6;
 		LED7 <= SW7;
+		
 		-- store switch values
 		switch_count(0) <= SW0;
 		switch_count(1) <= SW1;
@@ -116,11 +106,11 @@ architecture Behavioral of tutorial1 is
 		
 		------------------------------------------------------------------------
 		-- process to convert 8 bit switch_count into a 12 bit decmial value stored in bcd
-		-- updates values of hun ten and one for display
+		-- updates values of hun ten and one for display using double dabble algorithm
 		------------------------------------------------------------------------
 	   BCD_convert: process(switch_count)
 	   variable temp : std_logic_vector (7 downto 0) ;
-       variable bcd  : std_logic_vector (11 downto 0) ;
+       	   variable bcd  : std_logic_vector (11 downto 0) ;
 		
 	   begin
 			temp := switch_count ;
