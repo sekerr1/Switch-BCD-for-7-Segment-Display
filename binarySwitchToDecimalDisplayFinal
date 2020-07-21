@@ -6,10 +6,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 USE ieee.numeric_std.all;
-USE ieee.std_logic_unsigned.all;
---use IEEE.NUMERIC_STD.ALL;
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity tutorial1 is
     Port ( clk : in  STD_LOGIC;
